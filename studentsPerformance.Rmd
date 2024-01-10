@@ -1,0 +1,254 @@
+---
+title: "Student Math Score Prediction"
+output: html_notebook
+---
+
+```{r}
+# Import necessary libraries
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(corrplot)
+library(lmtest)
+```
+
+
+
+```{r}
+df <- read.csv('StudentsPerformance.csv') 
+head(df)
+```
+```{r}
+skim(df)
+```
+Dataset Structure
+
+```{r}
+# Let's vie our dataset structure
+str(df)
+```
+
+Check duplicated data
+```{r}
+duplicated_rows <- duplicated(df)
+
+# Print the duplicated rows
+print(df[duplicated_rows, ])
+```
+Check missing values in the dataset
+
+```{r}
+# Let's chek is ther missing values in the dataset
+sum(is.na(df))
+```
+```{r}
+# View the math score distribution
+hist(df$math.score)
+
+```
+
+Distribution of Student Reading Score
+```{r}
+hist(df$reading.score)
+```
+
+Distribution of student writing score
+```{r}
+hist(df$writing.score)
+```
+Correlation between math score, reading score and writing score
+
+```{r}
+df2 <- df[, c('math.score','reading.score','writing.score')]
+cordf2 <- cor(df2)
+```
+
+
+```{r}
+corrplot(cordf2, method="circle", type='upper', tl.cex=0.8, tl.col = 'black')
+```
+Based on correlation plot above, the three feature has positive correlation
+
+
+```{r}
+plot(df$math.score, df$writing.score, main = "Relation between Math Score and Writing Score", xlab = "Math Score", ylab = "Writing score", pch = 16, col = "blue")
+```
+Math 
+
+
+
+```{r}
+plot(df$math.score, df$reading.score, main = "Relation between Math Score and Reading Score", xlab = "Math Score", ylab = "Reading score", pch = 16, col = "blue")
+```
+Based on the plot above, mathematics scores have a relationship with reading scores
+
+```{r}
+plot(df$reading.score, df$writing.score, main = "Relation between Writing Score and Reading Score", xlab = "Reading Score", ylab = "Writing score", pch = 16, col = "blue")
+```
+Based on the plot above, mathematics scores have a relationship with writing scores
+
+```{r}
+ggplot(df, aes(x = race.ethnicity)) +
+  geom_bar(stat = "count", fill = "blue") +
+  labs(title = "How Many Each of Race Ethnicity", x = "Categories", y = "Count")
+```
+Based on barplot above, group c was student majority race ethnicity 
+
+```{r}
+ggplot(df, aes(y = parental.level.of.education)) +
+  geom_bar(stat = "count", fill = "blue") +
+  labs(title = "Student Parental level of education", x = "Count", y = "Categories")
+```
+Based on the plot above, the most student parent level education is associate's degree and some college
+
+
+```{r}
+ggplot(df, aes(y = lunch)) +
+  geom_bar(stat = "count", fill = "blue") +
+  labs(title = "Student lunch categories", x = "Count", y = "Categories")
+```
+
+Based on the plot above, more students eat free/reduced lunch
+
+
+```{r}
+ggplot(df, aes(y = test.preparation.course)) +
+  geom_bar(stat = "count", fill = "blue") +
+  labs(title = "Student that take test preparation course", x = "Count", y = "Categories")
+```
+Based on the plot above, more student don't complete the preparation test course 
+
+
+```{r}
+pivot_table <- df %>%
+  group_by(gender) %>%
+  summarise(
+    Avg_Math_score = mean(math.score),
+    avg_reading_score = mean(reading.score),
+    avg_writing_score = mean(writing.score)
+  )
+
+print(pivot_table)
+```
+Based on the Pivot table above, male student has higher average math score than female student. But the female students has higher average reading and writing score then male students
+
+```{r}
+pivot_table <- df %>%
+  group_by(race.ethnicity) %>%
+  summarise(
+    Avg_Math_score = mean(math.score),
+    avg_reading_score = mean(reading.score),
+    avg_writing_score = mean(writing.score)
+  )
+
+print(pivot_table)
+```
+Based on the Pivot table above, group E have the highest average score of math, reading and writing.
+
+```{r}
+pivot_table <- df %>%
+  group_by(parental.level.of.education) %>%
+  summarise(
+    Avg_Math_score = mean(math.score),
+    avg_reading_score = mean(reading.score),
+    avg_writing_score = mean(writing.score)
+  )
+
+print(pivot_table)
+```
+Based on the Pivot table above, student with master degree level parent education have the highest average score of math, reading and writing.
+
+
+```{r}
+pivot_table <- df %>%
+  group_by(lunch) %>%
+  summarise(
+    Avg_Math_score = mean(math.score),
+    avg_reading_score = mean(reading.score),
+    avg_writing_score = mean(writing.score)
+  )
+
+print(pivot_table)
+```
+Based on the Pivot table above, student with standard lunch have higher average score than student with free/reduced lunch
+
+
+```{r}
+pivot_table <- df %>%
+  group_by(test.preparation.course) %>%
+  summarise(
+    Avg_Math_score = mean(math.score),
+    avg_reading_score = mean(reading.score),
+    avg_writing_score = mean(writing.score)
+  )
+
+print(pivot_table)
+```
+Based on the Pivot table above, student that completed preparation test course have higher average score than student that not completed preparation test course
+
+## Linear Regression 1
+```{r}
+reg1<- lm(math.score~ reading.score+writing.score, data=df)
+
+```
+
+
+```{r}
+get_regression_table(reg1)
+
+```
+
+
+```{r}
+get_regression_points(reg1)
+```
+
+
+```{r}
+reg1_eval <- get_regression_summaries(reg1)
+```
+
+
+```{r}
+ggplot(df, aes(x = math.score, y = c(reading.score, writing.score), color = ethnicity)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Age", y = "Teaching score", color = "Ethnicity")
+```
+
+## Linear Regression 2
+```{r}
+reg2<- lm(math.score~ gender+lunch+test.preparation.course+reading.score, data=df)
+```
+
+```{r}
+get_regression_table(reg2)
+```
+
+```{r}
+get_regression_points(reg2)
+```
+
+```{r}
+reg2_eval <- get_regression_summaries(reg2)
+reg2_eval
+```
+
+
+## Linear Regression 3
+```{r}
+reg3<- lm(math.score~ gender+lunch+reading.score+writing.score, data=df)
+```
+
+```{r}
+get_regression_table(reg3)
+```
+```{r}
+get_regression_points(reg3)
+```
+
+
+```{r}
+reg3_eval <- get_regression_summaries(reg3)
+reg3_eval
+```
